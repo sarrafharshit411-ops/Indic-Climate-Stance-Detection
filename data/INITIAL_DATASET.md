@@ -1,31 +1,41 @@
 # Initial dataset package
 
-The initial dataset was supplied to the project as `Dataset — ClimateStance Files.zip`. It contains three CSV files:
+The project’s initial dataset has been supplied as three CSV split files. The uploaded files were inspected and their structure and counts verified.
 
 | File | Rows | Columns |
 |---|---:|---|
 | train.csv | 2,871 | text, label |
 | val.csv | 354 | text, label |
 | test.csv | 355 | text, label |
+| **Total** | **3,580** | |
 
-Combined: 3,580 examples. Label codes in the supplied files are numeric:
-- `0`: Against (counts match the team's recorded Against totals)
-- `1`: Favour
-- `2`: None
+## Label distribution
 
-Combined class counts: 0 = 387, 1 = 2,863, 2 = 330.
+The numeric labels in the supplied files have these counts:
 
-## Handling
+| Label code | Train | Validation | Test | Total |
+|---|---:|---:|---:|---:|
+| 0 | 308 | 44 | 35 | 387 |
+| 1 | 2,294 | 284 | 285 | 2,863 |
+| 2 | 269 | 26 | 35 | 330 |
 
-The supplied CSVs are the original initial split files. Keep the train/validation/test split unchanged. Do not merge and randomly re-split them. Add a stable source-row ID before translation, and keep all translations of a source row in its original split.
+These totals match the project's previously recorded class distribution. The working label interpretation is 0 = Against, 1 = Favour, and 2 = None; verify this mapping against the original dataset documentation before final publication.
 
-## Repository upload status
+## File integrity checks
 
-The project documentation and scripts are in this repository. The actual CSV payloads have not yet been committed. The connected GitHub file-writing capability accepts UTF-8 text files only and cannot transfer the uploaded ZIP/binary dataset directly. The dataset source licence and redistribution permission should also be checked before publishing the CSVs in this public repository.
+- All three files contain exactly the columns `text` and `label`.
+- No missing values were found in either column.
+- Split row counts and label counts match the project’s recorded statistics.
 
-To add the data manually, extract the supplied ZIP and upload:
-- `train.csv` to `data/raw/train.csv`
-- `val.csv` to `data/raw/val.csv`
-- `test.csv` to `data/raw/test.csv`
+## Repository placement
 
-Once the licence is confirmed and files are uploaded, update this page with the source URL, version, licence, and checksum.
+Place the supplied CSV files at:
+- `data/raw/train.csv`
+- `data/raw/val.csv`
+- `data/raw/test.csv`
+
+Preserve the supplied train/validation/test split. Do not merge and randomly re-split them. Add a stable source-row ID before translation, and keep all translations of a source row in its original split.
+
+## Provenance and licensing
+
+The exact source URL, dataset version, and redistribution licence still need to be verified. Do not publish the raw files in this public repository until redistribution permission is confirmed. Record the official source, version, licence, and checksums here once verified.
