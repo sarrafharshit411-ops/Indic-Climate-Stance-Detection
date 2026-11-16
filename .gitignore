@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.ipynb_checkpoints/
+.DS_Store
+.vscode/
+.idea/
+
+# Keep raw and processed data local until redistribution permission is verified
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Generated checkpoints and experiment outputs
+models/
+results/*
+!results/README.md
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+*.log
