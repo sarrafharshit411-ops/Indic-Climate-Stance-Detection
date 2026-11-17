@@ -8,16 +8,15 @@ venv/
 .vscode/
 .idea/
 
-# Keep raw and processed data local until redistribution permission is verified
+# Dataset files: keep private/local until upstream licence and redistribution rights are verified
 data/raw/*
 data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
-# Generated checkpoints and experiment outputs
+# Generated model artifacts and outputs (commit concise metrics/configs selectively)
 models/
-results/*
-!results/README.md
+results/checkpoints/
 *.pt
 *.pth
 *.bin
