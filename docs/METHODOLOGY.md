@@ -1,31 +1,31 @@
 # Methodology
 
-## Task
+## Problem
+Three-class stance classification for the claim: “Climate change and global warming are a serious concern.”
 
-Classify stance toward the claim: “Climate change and global warming are a serious concern.” Labels: Against, Favour, None.
+Labels: `0=Against`, `1=Favour`, `2=None`.
 
-## Planned workflow
+## Data pipeline
+1. Start from supplied labelled English data (3,580 examples).
+2. Preserve train (2,871), validation (354), and test (355) assignments.
+3. Translate into Hindi and Bengali using AI4Bharat IndicTrans2.
+4. Retain source IDs and labels across languages.
+5. Run structural checks and conservative whitespace normalization.
+6. Treat translation quality as a limitation requiring further semantic review.
 
-1. Dataset audit, label validation, duplicate checks, and split verification.
-2. Traditional baselines: TF-IDF with Logistic Regression and Linear SVM; consider word and character features.
-3. Translate English examples into Hindi and Bengali using the planned IndicTrans2 workflow. Preserve source IDs and split assignments.
-4. Use XLM-R as the primary multilingual transformer baseline. Compare standard cross-entropy with class-weighted cross-entropy.
-5. Consider MuRIL as a comparative model if compute/time permit.
-6. Evaluate accuracy, macro-F1, per-class precision/recall/F1, and confusion matrices.
+## Model families planned / under investigation
+- Traditional baselines: TF-IDF + Logistic Regression, Linear SVM, Naive Bayes.
+- Multilingual transformer: XLM-RoBERTa.
+- Indic-focused transformer: MuRIL.
+- IndicBERT v2 and Bengali-specific models may be evaluated after checkpoint suitability and compute-budget checks.
 
-## Preliminary English-only results
+Listing a model does not mean an experiment is complete. Add results only after reproducible training.
 
-These values were recorded in project notes. They have not been reproduced from code in this repository and are not Hindi/Bengali results.
+## Class imbalance
+Training counts: Against 308, Favour 2,294, None 269. The planned study compares standard and class-weighted cross-entropy. Weights are computed from training labels only; validation/test remain unchanged.
 
-| Model | Accuracy | Macro-F1 |
-|---|---:|---:|
-| Logistic Regression | 80.23% | 32.13% |
-| Linear SVM | 81.07% | 42.89% |
-| Weighted Linear SVM | 79.94% | 46.97% |
-| Word + character TF-IDF SVM | 79.66% | 46.24% |
-| XLM-R, weighted CE | 73.16% | 52.97% |
-| MuRIL | 78.81% | 40.18% |
+## Evaluation
+Primary metric: macro-F1. Also report accuracy, per-class precision/recall/F1 and confusion matrices. Compare languages/models using consistent protocols where feasible.
 
-## Research gap
-
-Study how machine-translated Hindi and Bengali versions of an English climate-stance dataset affect multilingual stance classification, particularly minority-class performance. Conclusions must be limited to translated benchmark data; this project does not by itself represent naturally authored Indic climate discourse.
+## Run metadata
+Record language, dataset version, checkpoint, seed, package versions, max sequence length, batch size, epochs, learning rate, loss configuration, selected validation epoch, test metrics, and limitations.

@@ -1,0 +1,7 @@
+file,rows,columns_match,missing_values_total,duplicate_ids,duplicate_full_rows,duplicate_translation_texts,empty_translations,label_values,split_values,issues
+hindi_train.csv,2871,true,0,0,0,12,0,"0,1,2",train,none
+hindi_val.csv,354,true,0,0,0,0,0,"0,1,2",val,none
+hindi_test.csv,355,true,0,0,0,1,0,"0,1,2",test,none
+bengali_train.csv,2871,true,0,0,0,2,0,"0,1,2",train,none
+bengali_val.csv,354,true,0,0,0,0,0,"0,1,2",val,none
+bengali_test.csv,355,true,0,0,0,1,0,"0,1,2",test,none
