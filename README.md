@@ -3,255 +3,365 @@
 <div align="center">
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
-![NLP](https://img.shields.io/badge/NLP-Multilingual-green?style=for-the-badge&logo=huggingface)
-![XLM-R](https://img.shields.io/badge/Model-XLM--R%20%7C%20MuRIL-orange?style=for-the-badge)
+![NLP](https://img.shields.io/badge/Task-Multilingual%20Stance%20Detection-green?style=for-the-badge)
+![Models](https://img.shields.io/badge/Models-TF--IDF%20%7C%20XLM--R%20%7C%20MuRIL-orange?style=for-the-badge)
 ![Languages](https://img.shields.io/badge/Languages-English%20%7C%20Hindi%20%7C%20Bengali-purple?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Active%20Research-red?style=for-the-badge)
+![Status](https://img.shields.io/badge/Stage-Milestone%202%20Evaluation-blueviolet?style=for-the-badge)
 
-**Multilingual stance classification for the claim:**
-> *"Climate change and global warming are a serious concern."*
+**Claim-specific stance classification for climate-change-related social-media text**
+
+> “Climate change and global warming is a serious concern.”
 
 **Labels:** `Against` · `Favour` · `None`
+
+**CSET346 — Natural Language Processing | Academic Year 2026–27**
 
 </div>
 
 ---
 
-## 📌 Table of Contents
+## Table of Contents
 
-- [Overview](#-overview)
-- [Dataset](#-dataset)
-- [Research Question](#-research-question)
-- [Methodology](#-methodology)
-- [Results](#-results)
-- [Project Structure](#-project-structure)
-- [Setup & Usage](#-setup--usage)
-- [Data Integrity](#-data-integrity)
-- [Contributors](#-contributors)
-- [Citation](#-citation)
-
----
-
-## 🔭 Overview
-
-This project addresses **multilingual stance detection** in the context of climate change discourse across Indian languages. The core challenge: given a text in English, Hindi, or Bengali, classify its stance towards the target claim into one of three categories — **Against**, **Favour**, or **None**.
-
-The pipeline leverages:
-- **Machine translation** (IndicTrans2) to synthesize Hindi and Bengali training data from an English stance dataset
-- **Traditional ML baselines** (TF-IDF + Logistic Regression / SVM)
-- **State-of-the-art multilingual transformers** (XLM-R, MuRIL)
-- Rigorous **class-imbalance handling** via weighted loss functions
-
-This work directly contributes to the growing body of research on **low-resource NLP for Indic languages** and **computational climate communication**.
+- [Project Overview](#project-overview)
+- [Task Definition](#task-definition)
+- [Dataset](#dataset)
+- [Multilingual Translation](#multilingual-translation)
+- [Methodology and Experiments](#methodology-and-experiments)
+- [Experimental Results](#experimental-results)
+- [Class-wise Evaluation](#class-wise-evaluation)
+- [Repository Structure](#repository-structure)
+- [Environment and Usage](#environment-and-usage)
+- [Limitations and Reproducibility Notes](#limitations-and-reproducibility-notes)
+- [Team Members](#team-members)
+- [References](#references)
 
 ---
 
-## 📊 Dataset
+## Project Overview
 
-| Split      | Examples |
-|------------|----------|
-| Train      | 2,871    |
-| Validation | 354      |
-| Test       | 355      |
-| **Total**  | **3,580**|
+This project develops and evaluates a three-class stance-detection workflow for social-media posts discussing climate change. For a fixed claim, the system predicts whether a post expresses **Against**, **Favour**, or **None**.
 
-### Label Distribution
+The project compares traditional TF-IDF-based machine-learning classifiers with multilingual transformer models. The experimental workflow includes English validation experiments and separate Hindi and Bengali test experiments using translated versions of the working English dataset.
 
-| Label   | Count | Percentage |
-|---------|-------|------------|
-| Favour  | 2,863 | 79.97%     |
-| Against | 387   | 10.81%     |
-| None    | 330   | 9.22%      |
+The central research focus is **minority-class recognition under substantial class imbalance**, not simply maximising overall accuracy.
 
-> ⚠️ **Note:** The dataset is heavily imbalanced with `Favour` as the dominant class. Class-weighted training strategies are employed to address minority-class recognition for `Against` and `None`.
+## Task Definition
 
-> ⚠️ The exact source provenance, official download URL, and redistribution licence still require verification. **Do not commit raw data to this repository until confirmed.**
+| Label | Meaning |
+|---|---|
+| `Against` (0) | The post opposes or disputes the target claim |
+| `Favour` (1) | The post supports the target claim |
+| `None` (2) | The post expresses no clear stance toward the target claim |
 
-**Expected CSV format:**
+This is **stance detection**, not topic detection or general sentiment analysis. A post can mention climate change without supporting or opposing the specified claim.
+
+## Dataset
+
+The working dataset contains **3,580 labelled examples**.
+
+### Split statistics
+
+| Split | Against | Favour | None | Total |
+|---|---:|---:|---:|---:|
+| Train | 308 | 2,294 | 269 | 2,871 |
+| Validation | 44 | 284 | 26 | 354 |
+| Test | 35 | 285 | 35 | 355 |
+| **Overall** | **387** | **2,863** | **330** | **3,580** |
+
+### Overall class distribution
+
+| Class | Examples | Share |
+|---|---:|---:|
+| Favour | 2,863 | 79.97% |
+| Against | 387 | 10.81% |
+| None | 330 | 9.22% |
+
+The dataset is strongly imbalanced. A classifier that predicts only the majority class can obtain approximately 80.28% test accuracy while failing to identify either minority class. For this reason, **Macro-F1 is the primary model-comparison metric**, alongside accuracy, Weighted-F1, per-class precision/recall/F1, and confusion matrices.
+
+> **Dataset provenance:** The current working set contains 3,580 examples. Project notes report 3,777 examples in the referenced ClimateStance publication; the 197-example difference has not been resolved. The exact working-file source identity, official download URL, version, and redistribution licence require confirmation. Do not treat the working files as an independently verified official course dataset.
+
+## Multilingual Translation
+
+The working English examples were translated into Hindi and Bengali using AI4Bharat IndicTrans2.
+
+**Translation checkpoint:** [ai4bharat/indictrans2-en-indic-dist-200M](https://huggingface.co/ai4bharat/indictrans2-en-indic-dist-200M)  
+**Toolkit:** [IndicTransToolkit](https://github.com/AI4Bharat/IndicTrans2)
+
+| Setting | Value |
+|---|---|
+| Source language | `eng_Latn` |
+| Hindi target | `hin_Deva` |
+| Bengali target | `ben_Beng` |
+| Maximum sequence length | 256 |
+| Beam size | 4 |
+| Batch size | 4 |
+| Intermediate checkpoint frequency | Every 10 batches |
+
+The original train/validation/test membership and labels were preserved during translation.
+
+**Important interpretation:** Hindi and Bengali examples are machine translations of English posts and inherit their English labels. They are not naturally authored Indic-language posts and were not independently annotated by Hindi/Bengali stance annotators. Structural matching checks do not prove that stance meaning was preserved in every translation.
+
+The supplied preprocessing records describe different details for different stages: the English experimental-analysis notes report URL removal and whitespace normalisation, while the Stage 1 translation/audit notes report whitespace trimming/collapse with URLs, hashtags, mentions, and punctuation preserved in the translated data. These descriptions should not be conflated as one identical preprocessing pipeline.
+
+## Methodology and Experiments
+
+Six experimental groups were evaluated:
+
+| ID | Model | Purpose |
+|---|---|---|
+| E1 | TF-IDF + Logistic Regression | Traditional baseline |
+| E2 | Word TF-IDF + Linear SVM | Unweighted margin-based baseline |
+| E3 | Class-weighted word TF-IDF + Linear SVM | Address class imbalance |
+| E4 | Word + character TF-IDF + class-weighted Linear SVM | Combine lexical and character features |
+| E5 | XLM-RoBERTa-base | Multilingual contextual transformer |
+| E6 | MuRIL-base-cased | Transformer for Indian-language use cases |
+
+### Classical ML workflow
+
+- TF-IDF vectorisation was fitted on training data and applied to validation/test data.
+- Logistic Regression and Linear SVM were used as traditional baselines.
+- Class weighting was applied in E3 and E4.
+- E4 combines word-level and character-level TF-IDF features.
+
+### Transformer workflow
+
+The supplied Hindi/Bengali XLM-R experiments used the following recorded configuration:
+
+| Parameter | Value |
+|---|---|
+| Epochs | 3 |
+| Maximum sequence length | 160 |
+| Batch size | 8 |
+| Encoder learning rate | 1e-5 |
+| Classifier-head learning rate | 3e-5 |
+| Optimizer | AdamW |
+| Weight decay | 0.01 |
+| Random seed | 42 |
+| Scheduler | Linear warmup/decay |
+| Model selection | Validation Macro-F1; validation loss as tie-breaker |
+
+Standard and class-weighted cross-entropy variants were compared where the corresponding experiment was run. Class weights were calculated from training labels only.
+
+### Why class-weighted loss?
+
+The dominant Favour class represents 79.97% of the working dataset. Standard cross-entropy can result in majority-class collapse. Weighted cross-entropy increases the loss contribution of minority-class errors, encouraging the model to learn Against and None as well.
+
+## Experimental Results
+
+**Evaluation splits are different:** English metrics below are validation results; Hindi and Bengali metrics are test results. They must not be interpreted as a direct like-for-like comparison across languages.
+
+### English — validation results
+
+| Model | Accuracy | Macro-F1 | Weighted-F1 |
+|---|---:|---:|---:|
+| E1 Logistic Regression | 80.23% | 32.13% | 71.94% |
+| E2 Linear SVM | 81.07% | 42.89% | 75.35% |
+| E3 Weighted Linear SVM | 79.94% | 46.97% | 76.80% |
+| E4 Word + Character Weighted SVM | 79.66% | 46.24% | 76.04% |
+| E5 XLM-R Weighted CE | 73.16% | **52.97%** | 75.15% |
+| E6 MuRIL Weighted CE | 78.81% | 40.18% | 73.69% |
+
+Among the supplied English validation results, weighted XLM-R achieved the highest Macro-F1 (52.97%). Linear SVM achieved the highest accuracy (81.07%), but its Against F1 was only 0.076.
+
+**English standard-cross-entropy XLM-R and MuRIL metrics were not present in the supplied English result files.** They are unavailable, not zero, and are not inferred from Indic experiments.
+
+### Hindi and Bengali — test results
+
+| Model / Variant | Hindi Accuracy | Hindi Macro-F1 | Bengali Accuracy | Bengali Macro-F1 |
+|---|---:|---:|---:|---:|
+| E1 Logistic Regression | 80.28% | 29.69% | 80.28% | 29.73% |
+| E2 Linear SVM | 79.72% | 36.19% | 80.00% | 33.16% |
+| E3 Weighted SVM | 79.72% | 43.39% | 79.15% | 38.55% |
+| E4 Word + Character Weighted SVM | 81.69% | 50.40% | 79.72% | 40.17% |
+| E5 XLM-R Standard CE | 80.28% | 29.69% | 80.28% | 29.69% |
+| **E5 XLM-R Weighted CE** | **73.80%** | **52.01%** | **70.14%** | **43.95%** |
+| E6 MuRIL Standard CE | 80.28% | 29.69% | 80.28% | 29.69% |
+| E6 MuRIL Weighted CE | 78.03% | 42.45% | 78.03% | 39.88% |
+
+Additional Weighted-F1 results:
+
+| Model | Hindi Weighted-F1 | Bengali Weighted-F1 |
+|---|---:|---:|
+| E1 Logistic Regression | 71.50% | 71.61% |
+| E2 Linear SVM | 73.08% | 72.56% |
+| E3 Weighted SVM | 75.25% | 73.77% |
+| E4 Word + Character Weighted SVM | 77.89% | 74.48% |
+| E5 XLM-R Weighted CE | 75.38% | 71.26% |
+| E6 MuRIL Weighted CE | 74.66% | 73.93% |
+
+### Main findings
+
+- Weighted XLM-R achieved the highest reported Indic test Macro-F1 in both languages: **52.01% Hindi** and **43.95% Bengali**.
+- It exceeded the E4 word + character weighted SVM by 1.61 percentage points in Hindi and 3.78 points in Bengali.
+- Standard XLM-R and standard MuRIL predicted every Indic test example as Favour. Their 80.28% accuracy reflects the majority-class share and not balanced stance recognition.
+- Weighted training improved minority-class recognition, while overall accuracy decreased.
+- E4 remains a strong classical baseline, especially for Hindi (50.40% Macro-F1).
+
+## Class-wise Evaluation
+
+### Weighted XLM-R — Hindi
+
+| Class | Precision | Recall | F1 |
+|---|---:|---:|---:|
+| Against | 34.29% | 34.29% | 34.29% |
+| Favour | 88.93% | 81.75% | 85.19% |
+| None | 29.31% | 48.57% | 36.56% |
+| **Macro-F1** | | | **52.01%** |
+
+Confusion matrix (actual rows, predicted columns; order: Against, Favour, None):
+
+```text
+              Predicted
+             A    F    N
+Actual A    12   17    6
+       F    17  233   35
+       N     6   12   17
 ```
-text,label,split
-"The earth is getting hotter...",Favour,train
-"This is exaggerated...",Against,validation
+
+### Weighted XLM-R — Bengali
+
+| Class | Precision | Recall | F1 |
+|---|---:|---:|---:|
+| Against | 24.24% | 22.86% | 23.53% |
+| Favour | 84.87% | 80.70% | 82.73% |
+| None | 21.57% | 31.43% | 25.58% |
+| **Macro-F1** | | | **43.95%** |
+
+Confusion matrix (actual rows, predicted columns; order: Against, Favour, None):
+
+```text
+              Predicted
+             A    F    N
+Actual A     8   21    6
+       F    21  230   34
+       N     4   20   11
 ```
-Columns: `text`, `label` (Against/Favour/None), `split` (train/validation/test)
 
----
+The model performs substantially better on Favour than on either minority class. Each minority class has only 35 test examples per language, so individual predictions can noticeably affect the reported scores.
 
-## ❓ Research Question
+## Repository Structure
 
-> *How does machine translation of an English stance dataset into Hindi and Bengali affect multilingual stance classification — particularly minority-class recognition?*
+The repository includes experiment notebooks, baseline/evaluation scripts, documentation, and result artifacts. The existing top-level structure is:
 
-Hindi and Bengali examples are **synthetic machine translations** (using [IndicTrans2](https://github.com/AI4Bharat/IndicTrans2)), not naturally collected Indic-language social media posts. This introduces a controlled setting for studying cross-lingual transfer while acknowledging translation noise as a confounding factor.
-
----
-
-## 🧪 Methodology
-
-### Phase 1 — Data Preparation
-1. Audit raw text for duplicates, encoding issues, and label inconsistencies
-2. Preserve source IDs and train/validation/test assignments across all translated versions
-3. Translate English training set to Hindi and Bengali using **IndicTrans2**
-4. Validate split integrity: no translated copy of a training example may appear in validation or test
-
-### Phase 2 — Baseline Models
-3. **TF-IDF + Logistic Regression** — word unigram/bigram features
-4. **Linear SVM** — standard and class-weighted variants
-5. **TF-IDF SVM** — combined word + character n-gram features
-
-### Phase 3 — Transformer Fine-tuning
-4. **XLM-RoBERTa (XLM-R)** — standard and class-weighted cross-entropy
-5. **MuRIL** — Google's multilingual model pretrained on Indic scripts (compute-permitting)
-
-### Phase 4 — Evaluation
-6. Report: **Accuracy**, **Macro-F1**, per-class Precision / Recall / F1, and **Confusion Matrices**
-
----
-
-## 📈 Results
-
-> **Note:** These are preliminary English-only results recorded in project notes. They have not yet been reproduced end-to-end from code in this repository. Hindi/Bengali multilingual results are pending.
-
-| Model                        | Accuracy | Macro-F1 |
-|------------------------------|:--------:|:--------:|
-| Logistic Regression          |  80.23%  |  32.13%  |
-| Linear SVM                   |  81.07%  |  42.89%  |
-| Weighted Linear SVM          |  79.94%  |  46.97%  |
-| Word + Character TF-IDF SVM  |  79.66%  |  46.24%  |
-| **XLM-R (Weighted CE)**      |**73.16%**|**52.97%**|
-| MuRIL                        |  78.81%  |  40.18%  |
-
-> XLM-R achieves the best Macro-F1 by better handling minority classes, despite slightly lower overall accuracy — consistent with class-imbalance behaviour.
-
----
-
-## 🗂️ Project Structure
-
-```
+```text
 Indic-Climate-Stance-Detection/
-│
-├── data/                        # Dataset placement (see Data Integrity)
-│   ├── raw/                     # Original source data (do NOT commit without licence)
-│   └── processed/               # Cleaned, translated, and split datasets
-│
-├── docs/                        # Documentation and protocols
-│   ├── CONTRIBUTIONS.md         # Actual contribution evidence (commits, PRs, results)
-│   ├── DATASET_PROTOCOL.md      # Data handling and integrity rules
-│   └── METHODOLOGY.md           # Detailed experimental design
-│
-├── notebooks/                   # Exploratory analysis and experiments
-│   └── Indic_Climate_Stance_Challenge_v01 (1).ipynb
-│
-├── results/                     # Reproducible metrics and plots
-│   ├── confusion_matrices/
-│   └── metrics.csv
-│
-├── src/                         # Training and evaluation scripts
-│   └── train_baseline.py        # Baseline model training
-│
-├── .gitignore
-├── CONTRIBUTING.md              # Contribution workflow guide
-├── README.md                    # This file
-└── requirements.txt             # Python dependencies
+├── data/
+├── docs/
+│   ├── CONTRIBUTIONS.md
+│   ├── DATASET_AND_PROTOCOL.md
+│   └── METHODOLOGY.md
+├── notebooks/
+│   ├── Hindi and Bengali XLM-R experiments
+│   ├── TF-IDF baseline experiments
+│   ├── MuRIL experiments
+│   └── compact result notebooks
+├── results/
+│   ├── E2_small_results/
+│   ├── E3_small_results/
+│   ├── language-specific result archives
+│   └── experimental analysis document
+├── src/
+│   ├── train_baseline.py
+│   └── evaluate.py
+├── requirements.txt
+├── CONTRIBUTING.md
+└── README.md
 ```
 
----
+See the repository's `notebooks/`, `results/`, and `docs/` directories for the actual experiment artifacts and supporting documentation.
 
-## ⚙️ Setup & Usage
+## Environment and Usage
 
-### Prerequisites
-- Python **3.10+**
+### Requirements
+
+- Python 3.10+
 - pip
+- For transformer fine-tuning: a compatible PyTorch/Transformers environment and sufficient GPU memory are recommended.
+- Classical baselines can be run on CPU.
 
-### Installation
+### Clone the repository
 
 ```bash
 git clone https://github.com/sarrafharshit411-ops/Indic-Climate-Stance-Detection.git
 cd Indic-Climate-Stance-Detection
+```
+
+### Install the repository's listed dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### Run a Baseline
+The current `requirements.txt` lists the lightweight baseline dependencies:
+
+```text
+pandas
+scikit-learn
+numpy
+matplotlib
+```
+
+Transformer notebooks may require additional packages (for example, PyTorch, Transformers, Datasets, SentencePiece, and IndicTransToolkit). Install the versions required by the individual notebook/runtime. The current requirements file is not a complete pinned environment for every transformer or translation notebook.
+
+### Run the baseline script
+
+The repository contains `src/train_baseline.py`. Check its command-line options before running:
 
 ```bash
-python -m src.train_baseline \
-    --data data/processed/dataset.csv \
-    --model linear_svm \
-    --class-weight balanced
+python src/train_baseline.py --help
 ```
 
-### Available Model Options
-| `--model` flag     | Description                        |
-|--------------------|------------------------------------|
-| `logistic`         | Logistic Regression + TF-IDF       |
-| `linear_svm`       | Linear SVM                         |
-| `char_svm`         | Word + Character n-gram TF-IDF SVM |
-| `xlmr`             | XLM-RoBERTa (fine-tuned)           |
+For transformer experiments, open the relevant notebook under `notebooks/` in Google Colab or a compatible Jupyter environment, select the appropriate GPU runtime, and follow the cells in order. Dataset files and model checkpoints may need to be supplied separately; they are not assumed to be included in the repository.
 
----
+> The README documents the measured experiments. It does not claim that every experiment can be reproduced from a single command with only the current lightweight requirements file.
 
-## 🔒 Data Integrity
+## Limitations and Reproducibility Notes
 
-> These rules are **mandatory** for all contributors.
+1. **Machine-translated Indic data:** Hindi and Bengali texts are translated from English and inherit English labels. Translation may introduce semantic drift, unnatural phrasing, or stance-label noise.
+2. **No independent Indic annotation:** Independent human stance annotations for Hindi and Bengali were not supplied.
+3. **Dataset provenance discrepancy:** The working set contains 3,580 examples, while project notes attribute 3,777 examples to the referenced ClimateStance publication. The 197-record difference and exact provenance remain unresolved.
+4. **Single-seed experiments:** The reported transformer results are single runs with seed 42. No mean, standard deviation, or statistical-significance claim is available.
+5. **Small minority test support:** Each Hindi/Bengali test split contains only 35 Against and 35 None examples.
+6. **English standard-CE result gap:** English standard-cross-entropy XLM-R and MuRIL numeric results were not found in the supplied English artifacts.
+7. **Preprocessing notes:** The English experimental-analysis notes and Stage 1 translation audit describe different URL-handling details. They should be documented as separate pipeline descriptions.
 
-- ❌ Do **not** commit raw data until its licence and redistribution permission are verified
-- ❌ Never allow translated copies of one source example to cross dataset splits (train/val/test contamination)
-- ✅ Fit all preprocessing (vectorizers, scalers) on **training data only**
-- ✅ Use **validation** for model selection; reserve **test** for final one-time evaluation
-- ❌ Do not commit model checkpoints or generated datasets (see `.gitignore`)
-- ✅ All results must record dataset version, random seed, and configuration
+These results should be treated as experimental findings on translated working data, not as a production-ready classifier or a validated measurement of naturally authored Indic public opinion.
 
----
+## Team Members
 
-## 👥 Contributors
+**Course:** CSET346 — Natural Language Processing  
+**Institution:** Bennett University  
+**Academic Year:** 2026–27
 
-This is a collaborative team project with equal contribution targets across four workstreams:
-
-| Contributor | GitHub | Workstream |
+| Team Member | University ID | GitHub Profile |
 |---|---|---|
-| **Harshit Raj** | [@sarrafharshit411-ops](https://github.com/sarrafharshit411-ops) | XLM-R fine-tuning, experiment integration, reproducibility |
-| **Kavvya Kumar Yadav** | — | Dataset audit, EDA, TF-IDF / traditional ML |
-| **Shwet Shivang** | [@ShwetShivang](https://github.com/ShwetShivang) | Transformer model comparison, evaluation framework, error analysis |
-| **Sanskar Garg** | — | IndicTrans2 integration, Hindi/Bengali translation pipeline & quality checks |
+| **Harshit Raj** | `s24cseu0733` | [@sarrafharshit411-ops](https://github.com/sarrafharshit411-ops) |
+| **Kavvya Kumar Yadav** | `s24cseu0651` | [@K-Kumaleo](https://github.com/K-Kumaleo) |
+| **Shwet Shivang** | `s24csu0537` | [@ShwetShivang](https://github.com/ShwetShivang) |
+| **Sanskar Garg** | `s24cseu0397` | [@sanskar171](https://github.com/sanskar171) |
 
-> Contribution targets are planning goals. Actual contributions are tracked via commits, pull requests, reviews, and experiment evidence in [docs/CONTRIBUTIONS.md](docs/CONTRIBUTIONS.md).
+### Contribution tracking
 
-### Shwet Shivang's Contributions
-- **Transformer Comparison**: Benchmarking XLM-R against MuRIL across all language settings
-- **Evaluation Framework**: Implementing per-class precision/recall/F1 reporting and confusion matrix visualization
-- **Error Analysis**: Investigating failure modes on minority classes (`Against`, `None`) and cross-lingual transfer errors
-- **Code Review**: Reviewing baseline implementation, data pipeline, and translation quality scripts
+The repository's [contribution register](docs/CONTRIBUTIONS.md) records the team's planned workstreams and an evidence-based completion log. Workstream descriptions are responsibility areas, not independently audited proof of completed individual work. Commit, pull-request, review, and experiment links should be added as work is delivered.
 
----
+All team members are expected to participate in experiment documentation, review, error analysis, and final reporting. Individual contribution claims should be supported by repository history and project artifacts.
 
-## 📄 Citation
+## References
 
-If you use this codebase or methodology in your research, please cite:
-
-```bibtex
-@misc{indicclimancestance2024,
-  title        = {Indic Climate Stance Detection: Multilingual Stance Classification for Climate Change Claims},
-  author       = {Harshit Raj and Kavvya Kumar Yadav and Shwet Shivang and Sanskar Garg},
-  year         = {2024},
-  howpublished = {\url{https://github.com/sarrafharshit411-ops/Indic-Climate-Stance-Detection}},
-  note         = {Team project}
-}
-```
-
----
-
-## 📚 References
-
-- [IndicTrans2 — AI4Bharat](https://github.com/AI4Bharat/IndicTrans2) — Neural machine translation for Indian languages
-- [XLM-RoBERTa — Conneau et al. (2020)](https://arxiv.org/abs/1911.02116) — Unsupervised cross-lingual representation learning
-- [MuRIL — Google Research](https://huggingface.co/google/muril-base-cased) — Multilingual representations for Indian languages
-- [SemEval-2016 Task 6](https://arxiv.org/abs/1606.05943) — Detecting Stance in Tweets (original stance detection benchmark)
+1. Mohammad, S. M., et al. (2016). [SemEval-2016 Task 6: Detecting Stance in Tweets](https://aclanthology.org/S16-1003/).
+2. Vaid, R., Pant, K., & Shrivastava, M. (2022). [Towards Fine-grained Classification of Climate Change Related Social Media Text](https://aclanthology.org/2022.acl-srw.35/).
+3. Conneau, A., et al. (2020). [Unsupervised Cross-lingual Representation Learning at Scale](https://aclanthology.org/2020.acl-main.747/).
+4. Khanuja, S., et al. (2021). [MuRIL: Multilingual Representations for Indian Languages](https://arxiv.org/abs/2103.10730).
+5. AI4Bharat. [IndicTrans2 model checkpoint](https://huggingface.co/ai4bharat/indictrans2-en-indic-dist-200M) and [IndicTrans2 toolkit](https://github.com/AI4Bharat/IndicTrans2).
+6. Luo, et al. (2020). [Global Warming Stance Detection (GWSD)](https://aclanthology.org/2020.findings-emnlp.296/).
+7. Shiwakoti, et al. (2024). [ClimaConvo](https://aclanthology.org/2024.lrec-main.88/).
 
 ---
 
 <div align="center">
 
-Made with ❤️ by the Indic Climate Stance Detection Team
+**Made by the Indic Climate Stance Detection Team**
 
-[![GitHub](https://img.shields.io/badge/GitHub-sarrafharshit411--ops-black?style=flat-square&logo=github)](https://github.com/sarrafharshit411-ops/Indic-Climate-Stance-Detection)
+[Repository](https://github.com/sarrafharshit411-ops/Indic-Climate-Stance-Detection) · [Issues](https://github.com/sarrafharshit411-ops/Indic-Climate-Stance-Detection/issues)
 
 </div>
