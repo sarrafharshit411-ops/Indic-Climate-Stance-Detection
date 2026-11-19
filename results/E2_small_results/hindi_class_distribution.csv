@@ -1,0 +1,10 @@
+split,class,count,percentage
+train,Against,308,10.73
+train,Favour,2294,79.9
+train,None,269,9.37
+validation,Against,44,12.43
+validation,Favour,284,80.23
+validation,None,26,7.34
+test,Against,35,9.86
+test,Favour,285,80.28
+test,None,35,9.86
